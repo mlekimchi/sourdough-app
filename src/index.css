@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-dough-50 text-gray-900;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overscroll-behavior: none;
+  }
+}
+
+@layer components {
+  .input {
+    @apply w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-gray-900
+           focus:outline-none focus:ring-2 focus:ring-dough-400 focus:border-transparent
+           text-base;
+  }
+  .label {
+    @apply block text-sm font-medium text-gray-600 mb-1;
+  }
+  .btn-primary {
+    @apply bg-dough-600 hover:bg-dough-500 text-white font-bold py-3 px-6 rounded-2xl
+           transition-colors active:scale-95;
+  }
+}

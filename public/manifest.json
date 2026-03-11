@@ -1,0 +1,24 @@
+{
+  "name": "Sourdough Companion",
+  "short_name": "Sourdough",
+  "description": "Your sourdough baking companion — timers, stages, and AI insights",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fdf7ed",
+  "theme_color": "#b45309",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

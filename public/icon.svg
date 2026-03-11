@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Rounded square background in dough-600 -->
+  <rect width="512" height="512" rx="110" fill="#b45309"/>
+
+  <!-- Loaf body (bottom flat rectangle) -->
+  <rect x="96" y="300" width="320" height="120" rx="24" fill="#fde68a"/>
+
+  <!-- Loaf dome (top rounded) -->
+  <path d="M96 308 Q96 152 256 152 Q416 152 416 308 Z" fill="#fde68a"/>
+
+  <!-- Crust shading on dome -->
+  <path d="M128 290 Q128 184 256 184 Q384 184 384 290" fill="none" stroke="#d97706" stroke-width="10" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Score line -->
+  <path d="M175 240 Q256 208 337 240" fill="none" stroke="#b45309" stroke-width="11" stroke-linecap="round"/>
+
+  <!-- Bottom crust line -->
+  <rect x="96" y="298" width="320" height="14" rx="7" fill="#d97706" opacity="0.4"/>
+</svg>

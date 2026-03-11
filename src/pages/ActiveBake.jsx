@@ -89,6 +89,34 @@ function SFProgressBar({ completedIds, activeId }) {
   )
 }
 
+// ── CR timer progress bar ─────────────────────────────────────────────────────
+
+const CR_TIMER_IDS = ['cr_mix_rest', 'cr_knead', 'cr_stretch_fold', 'cr_bulk_rise']
+const CR_TIMER_LABELS = { cr_mix_rest: 'Mix', cr_knead: 'Knead', cr_stretch_fold: 'Rest & Fold', cr_bulk_rise: 'Bulk Rise' }
+
+function CRProgressBar({ completedIds, activeId }) {
+  return (
+    <div className="flex gap-1.5 mt-2 mb-1">
+      {CR_TIMER_IDS.map(id => {
+        const done    = completedIds.includes(id)
+        const current = id === activeId
+        return (
+          <div key={id} className="flex-1 flex flex-col items-center gap-1">
+            <div className={`h-2 w-full rounded-full transition-colors ${
+              done    ? 'bg-amber-500' :
+              current ? 'bg-amber-400' :
+                        'bg-amber-100'
+            }`} />
+            <span className={`text-[10px] font-semibold text-center leading-tight ${
+              done || current ? 'text-amber-700' : 'text-amber-300'
+            }`}>{CR_TIMER_LABELS[id]}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Timer display ─────────────────────────────────────────────────────────────
 
 function TimerDisplay({ startTime, config }) {
@@ -177,7 +205,7 @@ const DEFAULT_FLOURS = [
   { name: 'Whole wheat flour', grams: '50'  },
 ]
 
-function IngredientsForm({ onSave, initialValues = {} }) {
+function IngredientsForm({ onSave, initialValues = {}, ingredientGuide }) {
   const initFlours = initialValues.flours
     ? initialValues.flours.map(f => ({ name: f.name, grams: String(f.grams) }))
     : DEFAULT_FLOURS
@@ -222,6 +250,13 @@ function IngredientsForm({ onSave, initialValues = {} }) {
 
   return (
     <div className="space-y-4">
+      {ingredientGuide && (
+        <div className="bg-dough-50 rounded-xl p-3 text-xs text-gray-600">
+          <p className="font-semibold text-dough-700 mb-2">Ingredients</p>
+          <p className="leading-relaxed whitespace-pre-line">{ingredientGuide}</p>
+        </div>
+      )}
+
       <div>
         <label className="label">Recipe Name</label>
         <input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Country Sourdough" />
@@ -522,7 +557,11 @@ export default function ActiveBake({ activeBake, bakeActions }) {
         {activeStage?.stageId === 'ingredients' && (
           <div className="bg-white rounded-2xl border border-dough-200 p-5">
             <h3 className="font-bold text-gray-800 text-lg mb-4">Recipe & Ingredients</h3>
-            <IngredientsForm onSave={handleIngredientsSubmit} initialValues={activeBake.recipe || {}} />
+            <IngredientsForm
+              onSave={handleIngredientsSubmit}
+              initialValues={activeBake.recipe || {}}
+              ingredientGuide={activeBake.recipe?.ingredientGuide}
+            />
           </div>
         )}
 
@@ -547,6 +586,10 @@ export default function ActiveBake({ activeBake, bakeActions }) {
 
             {SF_IDS.includes(activeStage.stageId) && (
               <SFProgressBar completedIds={completedIds} activeId={activeStage.stageId} />
+            )}
+
+            {CR_TIMER_IDS.includes(activeStage.stageId) && (
+              <CRProgressBar completedIds={completedIds} activeId={activeStage.stageId} />
             )}
 
             <TimerDisplay startTime={activeStage.startTime} config={activeStageConfig} />
@@ -618,6 +661,8 @@ export default function ActiveBake({ activeBake, bakeActions }) {
                 <p className="text-gray-500 text-sm mt-0.5">
                   {nextStageConfig.isForm
                     ? 'Enter recipe details'
+                    : nextStageConfig.noTimer
+                    ? 'No timer'
                     : nextStageConfig.countDown
                     ? `${nextStageConfig.countDown} min countdown`
                     : nextStageConfig.typicalMax >= 60

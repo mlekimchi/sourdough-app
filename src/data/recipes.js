@@ -10,22 +10,34 @@ const CINNAMON_ROLL_STAGES = [
     isForm: true,
   },
   {
+    id: 'cr_prepare_dough',
+    label: 'Prepare Dough',
+    description: 'Combine wet ingredients and set up your mixer before mixing.',
+    noTimer: true,
+    tips: [
+      'Melt 2 TB (28g) butter — or 8 TB for extra richness',
+      'Mix melted butter + 160g kefir/milk slowly so it doesn\'t chunk',
+      'In mixer with paddle: mix 1 egg, 100g starter, and 24g sugar',
+      'Add the melted butter + kefir mixture',
+      'Add 300–360g flour and 5g salt last',
+    ],
+  },
+  {
     id: 'cr_mix_rest',
     label: 'Mix & Rest',
-    description: 'Mix dough with paddle attachment until sticky, then rest 30 minutes covered.',
+    description: 'Mix with paddle for 1 minute until a sticky dough forms. Cover and rest 30 minutes.',
     countDown: 30,
     tips: [
-      'Use paddle attachment: mix melted butter + kefir first to avoid chunking',
-      'Add egg, starter, sugar, then flour + salt last',
-      'Mix ~1 minute until a sticky dough forms',
-      'Cover and rest 30 minutes',
+      'Mix on low with paddle attachment for ~1 minute',
+      'Stop when a sticky, shaggy dough forms — don\'t overmix',
+      'Cover tightly and rest for 30 minutes',
     ],
   },
   {
     id: 'cr_knead',
     label: 'Knead',
-    description: 'Switch to dough hook, knead on medium-low until soft, supple, and pulling away from bowl.',
-    countUp: true,
+    description: 'Switch to dough hook, knead on medium-low for 6–8 minutes until soft, supple, and pulling away.',
+    countDown: 8,
     typicalMin: 6,
     typicalMax: 8,
     tips: [
@@ -36,14 +48,25 @@ const CINNAMON_ROLL_STAGES = [
     ],
   },
   {
+    id: 'cr_stretch_fold',
+    label: 'Rest & Stretch',
+    description: 'Rest 30 minutes, then do 1 set of stretch & folds.',
+    countDown: 30,
+    tips: [
+      'Cover and rest for 30 minutes',
+      'After timer: do 1 set of stretch & folds (4 folds, rotating the bowl)',
+      'Wet your hands to prevent sticking',
+      'Then move straight to bulk rise',
+    ],
+  },
+  {
     id: 'cr_bulk_rise',
     label: 'Bulk Rise',
-    description: 'Do 1 stretch & fold after 30 min, then rise 8–12 hours until doubled.',
+    description: 'Rise 8–12 hours at room temp until dough doubles in size.',
     countUp: true,
     typicalMin: 480,
     typicalMax: 720,
     tips: [
-      'After 30 minutes, do 1 set of stretch & folds',
       'Cover and leave undisturbed for 8–12 hours at room temp',
       'Enriched doughs rise slower than lean sourdough — be patient',
       'Dough should roughly double in size',
@@ -51,21 +74,30 @@ const CINNAMON_ROLL_STAGES = [
     ],
   },
   {
-    id: 'cr_fill_shape',
-    label: 'Fill & Shape',
-    description: 'Roll out dough, spread cinnamon filling, roll tight, cut into 8 rolls.',
-    countUp: true,
-    typicalMin: 20,
-    typicalMax: 40,
+    id: 'cr_cinnamon_filling',
+    label: 'Cinnamon Sugar Filling',
+    description: 'Mix together the cinnamon sugar filling.',
+    noTimer: true,
     tips: [
-      'Flour the surface generously (olive oil works great too)',
+      'Mix 8 TB (112g) softened room temp butter',
+      'Add 100g sugar (mix of white and brown)',
+      'Add 1 TB cinnamon and 1 TB flour',
+      'Mix until combined and spreadable',
+    ],
+  },
+  {
+    id: 'cr_roll_cut',
+    label: 'Roll & Cut',
+    description: 'Roll out dough, spread cinnamon filling, add pecans, roll tight, and cut into 8 rolls.',
+    noTimer: true,
+    tips: [
+      'Flour the surface generously — olive oil works great too',
       'Roll dough into a 16×12" rectangle',
-      'Spread 8 TB softened butter all the way to the edges',
-      'Scatter cinnamon-sugar (100g sugar + 1 TB cinnamon + 1 TB flour)',
-      'Add pecans evenly over the filling',
-      'Roll tight — even pressure as you go',
+      'Spread cinnamon sugar filling all the way to the edges',
+      'Scatter pecans evenly over the filling',
+      'Roll tight — keep even pressure the whole way',
       'Cut into 8 rolls: 6 in a glass baking pan, 2 in jars',
-      'Option: freeze here, then defrost overnight and bake in the morning',
+      '❄️ Option: Freeze here. Defrost overnight and bake in the morning.',
     ],
   },
   {
@@ -76,9 +108,9 @@ const CINNAMON_ROLL_STAGES = [
     typicalMin: 60,
     typicalMax: 120,
     tips: [
-      'Cover loosely and rest at room temp 1–2 hours',
+      'Cover loosely and rest at room temp for 1–2 hours',
       'Rolls should look puffy and slightly increased in size',
-      'Option: refrigerate overnight, then bring to room temp before baking',
+      '❄️ Option: Refrigerate overnight. Bring to room temp before baking.',
     ],
   },
   {
@@ -96,7 +128,7 @@ const CINNAMON_ROLL_STAGES = [
   {
     id: 'cr_bake',
     label: 'Bake',
-    description: 'Bake 35–45 minutes until light golden brown. Check at 35 minutes.',
+    description: 'Bake at 350°F for 35–45 minutes until light golden brown. Check at 35 minutes.',
     countDown: 35,
     ovenTemp: '350°F / 175°C',
     tips: [
@@ -123,11 +155,13 @@ const SOURDOUGH_AUTO_ADVANCE = {
 }
 
 const CR_AUTO_ADVANCE = {
-  cr_mix_rest:    'cr_knead',
-  cr_knead:       'cr_bulk_rise',
-  cr_bulk_rise:   'cr_fill_shape',
-  cr_fill_shape:  'cr_second_rise',
-  cr_second_rise: 'cr_preheat',
+  cr_mix_rest:      'cr_knead',
+  cr_knead:         'cr_stretch_fold',
+  cr_stretch_fold:  'cr_bulk_rise',
+  cr_bulk_rise:     'cr_cinnamon_filling',
+  // cr_cinnamon_filling is noTimer (no auto-advance)
+  cr_roll_cut:      'cr_second_rise',
+  cr_second_rise:   'cr_preheat',
   // cr_preheat is noTimer (no auto-advance); cr_bake is the last stage
 }
 
@@ -158,7 +192,8 @@ export const RECIPES = [
       waterGrams: 160,
       saltGrams: 5,
       waterLabel: 'Kefir / Milk',
-      notes: 'Wet: 1 egg, 28g melted butter (2 TB), 24g sugar.\nFilling: 8 TB softened butter, 100g sugar, 1 TB cinnamon, 1 TB flour, pecans.',
+      notes: '',
+      ingredientGuide: 'Wet:\n• 2 TB (28g) melted butter [or 8 TB]\n• 160g milk / kefir\n• 1 egg\n• 100g sourdough starter (active or discard)\n• 24g sugar\n\nDry:\n• 300g flour [or 360g]\n• 5g salt\n\nCinnamon Sugar Filling:\n• 6 TB (84g) room temp butter\n• 100g sugar (white + brown mix)\n• 1 TB cinnamon\n• 1 TB flour\n• Pecans',
     },
   },
 ]

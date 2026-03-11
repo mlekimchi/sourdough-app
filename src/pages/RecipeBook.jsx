@@ -55,19 +55,20 @@ export default function RecipeBook({ onStartBake }) {
             {recipe.defaultIngredients && (
               <div className="px-4 pb-4">
                 <div className="bg-dough-50 rounded-xl p-3 text-xs text-gray-600">
-                  <p className="font-semibold text-dough-700 mb-2">Key Ingredients</p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                    <span>Starter: {recipe.defaultIngredients.starterGrams}g</span>
-                    <span>Flour: {recipe.defaultIngredients.flourGrams}g</span>
-                    <span>
-                      {recipe.defaultIngredients.waterLabel || 'Water'}: {recipe.defaultIngredients.waterGrams}g
-                    </span>
-                    <span>Salt: {recipe.defaultIngredients.saltGrams}g</span>
-                  </div>
-                  {recipe.defaultIngredients.notes && (
-                    <p className="text-gray-400 mt-2 leading-relaxed whitespace-pre-line">
-                      {recipe.defaultIngredients.notes}
+                  <p className="font-semibold text-dough-700 mb-2">Ingredients</p>
+                  {(recipe.defaultIngredients.ingredientGuide || recipe.defaultIngredients.notes) ? (
+                    <p className="leading-relaxed whitespace-pre-line">
+                      {recipe.defaultIngredients.ingredientGuide || recipe.defaultIngredients.notes}
                     </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                      <span>Starter: {recipe.defaultIngredients.starterGrams}g</span>
+                      <span>Flour: {recipe.defaultIngredients.flourGrams}g</span>
+                      <span>
+                        {recipe.defaultIngredients.waterLabel || 'Water'}: {recipe.defaultIngredients.waterGrams}g
+                      </span>
+                      <span>Salt: {recipe.defaultIngredients.saltGrams}g</span>
+                    </div>
                   )}
                 </div>
               </div>

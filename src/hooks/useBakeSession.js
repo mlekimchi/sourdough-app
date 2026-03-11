@@ -10,8 +10,8 @@ export function useBakeSession() {
   }, [])
 
   // Start a brand-new bake
-  const startBake = useCallback(recipe => {
-    const bake = newBakeSession(recipe)
+  const startBake = useCallback(({ recipe, stageConfigs, autoAdvance, recipeId }) => {
+    const bake = newBakeSession({ recipe, stageConfigs, autoAdvance, recipeId })
     persist(bake)
     return bake
   }, [persist])

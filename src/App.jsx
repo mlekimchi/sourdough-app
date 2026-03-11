@@ -3,6 +3,7 @@ import { useBakeSession } from './hooks/useBakeSession'
 import { getActiveBake } from './services/storage'
 import Home from './pages/Home'
 import NewBake from './pages/NewBake'
+import RecipeBook from './pages/RecipeBook'
 import ActiveBake from './pages/ActiveBake'
 import Survey from './pages/Survey'
 import History from './pages/History'
@@ -33,6 +34,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home activeBake={activeBake} />} />
         <Route path="/new-bake" element={<NewBake onStartBake={startBake} />} />
+        <Route path="/recipes" element={<RecipeBook onStartBake={startBake} />} />
         <Route
           path="/bake"
           element={

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Star, Thermometer, Clock } from 'lucide-react'
 import { getAllBakes, deleteBake } from '../services/storage'
 import { STAGES } from '../data/stages'
+import { RECIPES } from '../data/recipes'
 
 function stageDuration(stage) {
   if (!stage?.startTime || !stage?.endTime) return null
@@ -67,11 +68,20 @@ export default function History() {
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="font-semibold text-gray-800">{bake.recipe?.name || 'Untitled'}</div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-gray-800">{bake.recipe?.name || 'Untitled'}</span>
+                      {bake.recipeId && bake.recipeId !== 'sourdough_loaf' && (
+                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                          {RECIPES.find(r => r.id === bake.recipeId)?.emoji} {RECIPES.find(r => r.id === bake.recipeId)?.name}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-gray-500 text-xs mt-0.5">
                       {date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                      {' · '}
-                      {bake.recipe?.totalFlourWeight}g · {bake.recipe?.hydration}% hydration
+                      {(bake.recipe?.flourGrams || bake.recipe?.totalFlourWeight) && (
+                        <> · {bake.recipe.flourGrams || bake.recipe.totalFlourWeight}g flour</>
+                      )}
+                      {bake.recipe?.hydration ? <> · {bake.recipe.hydration}% hydration</> : null}
                     </div>
                   </div>
                   {survey && (
@@ -92,7 +102,7 @@ export default function History() {
                     <div className="flex flex-wrap gap-1">
                       {bake.recipe?.flours?.map((f, i) => (
                         <span key={i} className="bg-dough-100 text-dough-700 text-xs rounded-full px-2 py-0.5">
-                          {f.name} {f.percentage}%
+                          {f.name} {f.percentage != null ? `${f.percentage}%` : `${f.grams}g`}
                         </span>
                       ))}
                       <span className="bg-gray-100 text-gray-600 text-xs rounded-full px-2 py-0.5">
@@ -110,7 +120,7 @@ export default function History() {
                       <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Stage Times</p>
                       <div className="space-y-1">
                         {bake.stages.filter(s => s.endTime).map(s => {
-                          const cfg = STAGES.find(c => c.id === s.stageId)
+                          const cfg = (bake.stageConfigs || STAGES).find(c => c.id === s.stageId)
                           const dur = stageDuration(s)
                           return (
                             <div key={s.stageId} className="flex justify-between text-sm">

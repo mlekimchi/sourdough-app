@@ -21,10 +21,9 @@ function playBeep() {
   } catch (_) {}
 }
 
-// ── Auto-advance map ──────────────────────────────────────────────────────────
-// After ending a stage, immediately start the listed next stage.
+// ── Default auto-advance (sourdough fallback for old bakes) ───────────────────
 
-const AUTO_ADVANCE = {
+const DEFAULT_AUTO_ADVANCE = {
   mix_rest:     'sf_1',
   sf_1:         'sf_2',
   sf_2:         'sf_3',
@@ -178,13 +177,19 @@ const DEFAULT_FLOURS = [
   { name: 'Whole wheat flour', grams: '50'  },
 ]
 
-function IngredientsForm({ onSave }) {
-  const [name,    setName]    = useState('')
-  const [starter, setStarter] = useState('200')
-  const [flours,  setFlours]  = useState(DEFAULT_FLOURS)
-  const [water,   setWater]   = useState('310')
-  const [salt,    setSalt]    = useState('12')
-  const [notes,   setNotes]   = useState('')
+function IngredientsForm({ onSave, initialValues = {} }) {
+  const initFlours = initialValues.flours
+    ? initialValues.flours.map(f => ({ name: f.name, grams: String(f.grams) }))
+    : DEFAULT_FLOURS
+
+  const [name,    setName]    = useState(initialValues.name    || '')
+  const [starter, setStarter] = useState(initialValues.starterGrams != null ? String(initialValues.starterGrams) : '200')
+  const [flours,  setFlours]  = useState(initFlours)
+  const [water,   setWater]   = useState(initialValues.waterGrams   != null ? String(initialValues.waterGrams)   : '310')
+  const [salt,    setSalt]    = useState(initialValues.saltGrams    != null ? String(initialValues.saltGrams)    : '12')
+  const [notes,   setNotes]   = useState(initialValues.notes   || '')
+
+  const waterLabel = initialValues.waterLabel || 'Water'
 
   const totalFlour = flours.reduce((sum, f) => sum + (Number(f.grams) || 0), 0)
   const canSave    = totalFlour > 0 && Number(water) > 0 && Number(starter) > 0 && Number(salt) > 0
@@ -266,9 +271,9 @@ function IngredientsForm({ onSave }) {
             </button>
           </div>
 
-          {/* Water */}
+          {/* Water / liquid */}
           <div className="flex items-center gap-3">
-            <label className="w-16 text-sm font-medium text-gray-600 shrink-0">Water</label>
+            <label className="w-16 text-sm font-medium text-gray-600 shrink-0">{waterLabel}</label>
             <div className="relative flex-1">
               <input className="input pr-7" type="number" inputMode="decimal"
                 value={water} onChange={e => setWater(e.target.value)} placeholder="310" />
@@ -373,15 +378,24 @@ export default function ActiveBake({ activeBake, bakeActions }) {
     )
   }
 
+  // Use per-bake stage configs (set at bake creation); fall back to sourdough
+  // STAGES for old bakes that pre-date the recipe book feature.
+  const stageConfigs = activeBake.stageConfigs?.length ? activeBake.stageConfigs : STAGES
+  const AUTO_ADVANCE = activeBake.autoAdvance && Object.keys(activeBake.autoAdvance).length
+    ? activeBake.autoAdvance
+    : DEFAULT_AUTO_ADVANCE
+
   const { stages, tempLogs } = activeBake
 
   const activeStage       = stages.find(s => s.startTime && !s.endTime)
-  const activeStageConfig = activeStage ? STAGES.find(s => s.id === activeStage.stageId) : null
+  const activeStageConfig = activeStage ? stageConfigs.find(s => s.id === activeStage.stageId) : null
   const completedIds      = stages.filter(s => s.endTime).map(s => s.stageId)
-  const nextStageConfig   = STAGES.find(s => !completedIds.includes(s.id) && s.id !== activeStage?.stageId)
-  const allDone           = completedIds.includes('bake_uncovered')
+  const nextStageConfig   = stageConfigs.find(s => !completedIds.includes(s.id) && s.id !== activeStage?.stageId)
+  const lastStageId       = stageConfigs[stageConfigs.length - 1]?.id
+  const allDone           = lastStageId ? completedIds.includes(lastStageId) : false
 
-  const isBakeStage = id => ['preheat', 'bake_covered', 'bake_uncovered'].includes(id)
+  // Stages with an ovenTemp get the orange "bake" color scheme
+  const isBakeStage = id => !!(stageConfigs.find(s => s.id === id)?.ovenTemp)
 
   const handleStartStage = (stageId) => {
     startStage(stageId)
@@ -508,7 +522,7 @@ export default function ActiveBake({ activeBake, bakeActions }) {
         {activeStage?.stageId === 'ingredients' && (
           <div className="bg-white rounded-2xl border border-dough-200 p-5">
             <h3 className="font-bold text-gray-800 text-lg mb-4">Recipe & Ingredients</h3>
-            <IngredientsForm onSave={handleIngredientsSubmit} />
+            <IngredientsForm onSave={handleIngredientsSubmit} initialValues={activeBake.recipe || {}} />
           </div>
         )}
 
@@ -626,7 +640,7 @@ export default function ActiveBake({ activeBake, bakeActions }) {
             <h3 className="font-semibold text-gray-400 text-xs uppercase tracking-wide mb-3">Completed</h3>
             <div className="space-y-2">
               {stages.filter(s => s.endTime).map(s => {
-                const cfg = STAGES.find(c => c.id === s.stageId)
+                const cfg = stageConfigs.find(c => c.id === s.stageId)
                 const dur = stageDurationMin(s)
                 const inc = s.inclusion || s.mixIn
                 const editable = !cfg?.isForm && !cfg?.noTimer && dur != null
@@ -734,9 +748,9 @@ export default function ActiveBake({ activeBake, bakeActions }) {
       {showTips && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4" onClick={() => setShowTips(null)}>
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={e => e.stopPropagation()}>
-            <h3 className="font-bold text-lg mb-3">{STAGES.find(s => s.id === showTips)?.label} Tips</h3>
+            <h3 className="font-bold text-lg mb-3">{stageConfigs.find(s => s.id === showTips)?.label} Tips</h3>
             <ul className="space-y-2">
-              {STAGES.find(s => s.id === showTips)?.tips?.map((tip, i) => (
+              {stageConfigs.find(s => s.id === showTips)?.tips?.map((tip, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                   <span className="text-dough-500 mt-0.5 shrink-0">•</span> {tip}
                 </li>

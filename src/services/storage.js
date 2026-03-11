@@ -68,12 +68,15 @@ export function createBakeId() {
   return `bake_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
 }
 
-export function newBakeSession(recipe) {
+export function newBakeSession({ recipe, stageConfigs, autoAdvance, recipeId }) {
   return {
     id: createBakeId(),
     createdAt: new Date().toISOString(),
     completedAt: null,
     recipe,
+    recipeId:     recipeId     || 'sourdough_loaf',
+    stageConfigs: stageConfigs || [],   // full stage config objects for this bake
+    autoAdvance:  autoAdvance  || {},   // { stageId → nextStageId }
     stages: [],           // { stageId, startTime, endTime, isCold, notes }
     stretchAndFolds: [],  // { timestamp, setNumber }
     tempLogs: [],         // { timestamp, ambient, dough, unit }

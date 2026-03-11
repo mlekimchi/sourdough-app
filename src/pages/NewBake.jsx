@@ -1,11 +1,18 @@
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Wheat } from 'lucide-react'
+import { ChevronLeft, Wheat, BookOpen } from 'lucide-react'
+import { RECIPES } from '../data/recipes'
 
 export default function NewBake({ onStartBake }) {
   const navigate = useNavigate()
+  const sourdough = RECIPES[0]
 
   const handleStart = () => {
-    onStartBake({ name: '', starterGrams: null, flourGrams: null, waterGrams: null, saltGrams: null, notes: '' })
+    onStartBake({
+      recipe: { name: '', starterGrams: null, flourGrams: null, waterGrams: null, saltGrams: null, notes: '' },
+      stageConfigs: sourdough.stageConfigs,
+      autoAdvance:  sourdough.autoAdvance,
+      recipeId:     sourdough.id,
+    })
     navigate('/bake')
   }
 
@@ -32,9 +39,17 @@ export default function NewBake({ onStartBake }) {
 
         <button
           onClick={handleStart}
-          className="w-full bg-dough-600 hover:bg-dough-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors"
+          className="w-full bg-dough-600 hover:bg-dough-500 text-white font-bold py-4 rounded-2xl text-lg transition-colors mb-4"
         >
           Start Bake
+        </button>
+
+        <button
+          onClick={() => navigate('/recipes')}
+          className="w-full flex items-center justify-center gap-2 border-2 border-dough-300 text-dough-700 font-semibold py-4 rounded-2xl text-base hover:bg-dough-50 transition-colors"
+        >
+          <BookOpen size={20} />
+          Open Recipe Book
         </button>
       </div>
     </div>

@@ -356,7 +356,7 @@ export default function ActiveBake({ activeBake, bakeActions }) {
   const [showTempModal,   setShowTempModal]   = useState(false)
   const [showTips,        setShowTips]        = useState(null)
   const [showAbandon,     setShowAbandon]     = useState(false)
-  const [editingStage,    setEditingStage]    = useState(null) // { stageId, label, durationMin }
+  const [editingStage,    setEditingStage]    = useState(null) // { stageId, label, hours, minutes }
   // Temp inputs
   const [tempAmbient,     setTempAmbient]     = useState('')
   const [tempDough,       setTempDough]       = useState('')
@@ -427,13 +427,19 @@ export default function ActiveBake({ activeBake, bakeActions }) {
   }
 
   const openEditStage = (s, cfg) => {
-    const dur = stageDurationMin(s)
-    setEditingStage({ stageId: s.stageId, label: cfg?.label || s.stageId, durationMin: dur ?? 0 })
+    const dur = stageDurationMin(s) ?? 0
+    setEditingStage({
+      stageId: s.stageId,
+      label: cfg?.label || s.stageId,
+      hours: Math.floor(dur / 60),
+      minutes: dur % 60,
+    })
   }
 
   const handleSaveEditStage = () => {
     if (!editingStage) return
-    editStageDuration(editingStage.stageId, editingStage.durationMin)
+    const totalMinutes = (editingStage.hours * 60) + editingStage.minutes
+    editStageDuration(editingStage.stageId, totalMinutes)
     setEditingStage(null)
   }
 
@@ -747,14 +753,37 @@ export default function ActiveBake({ activeBake, bakeActions }) {
           <div className="bg-white rounded-t-3xl p-6 w-full max-w-md mx-auto" onClick={e => e.stopPropagation()}>
             <h3 className="font-bold text-lg mb-1">Edit Duration</h3>
             <p className="text-gray-400 text-sm mb-4">{editingStage.label}</p>
-            <label className="label">Duration (minutes)</label>
-            <input
-              className="input mb-4"
-              type="number"
-              inputMode="decimal"
-              value={editingStage.durationMin}
-              onChange={e => setEditingStage(prev => ({ ...prev, durationMin: Number(e.target.value) }))}
-            />
+            <div className="flex gap-3 mb-4">
+              <div className="flex-1">
+                <label className="label">Hours</label>
+                <div className="relative">
+                  <input
+                    className="input pr-10"
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    value={editingStage.hours}
+                    onChange={e => setEditingStage(prev => ({ ...prev, hours: Math.max(0, Number(e.target.value)) }))}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">hr</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <label className="label">Minutes</label>
+                <div className="relative">
+                  <input
+                    className="input pr-10"
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    max="59"
+                    value={editingStage.minutes}
+                    onChange={e => setEditingStage(prev => ({ ...prev, minutes: Math.min(59, Math.max(0, Number(e.target.value))) }))}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">min</span>
+                </div>
+              </div>
+            </div>
             <div className="flex gap-3">
               <button onClick={() => setEditingStage(null)} className="flex-1 bg-gray-100 rounded-xl py-3 font-medium">Cancel</button>
               <button onClick={handleSaveEditStage} className="flex-1 bg-dough-600 text-white rounded-xl py-3 font-bold">Save</button>

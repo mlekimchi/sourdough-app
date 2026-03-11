@@ -105,6 +105,43 @@ export function useBakeSession() {
     })
   }, [])
 
+  // Go back to the previous stage (undo accidental advance)
+  const goBackStage = useCallback(() => {
+    setActiveBakeState(prev => {
+      const stages = [...prev.stages]
+      // Find and remove the active (open) stage
+      const activeIdx = stages.reduce((acc, s, i) => (!s.endTime ? i : acc), -1)
+      if (activeIdx === -1) return prev
+      stages.splice(activeIdx, 1)
+      // Un-complete the last completed stage so it becomes active again
+      const lastDoneIdx = stages.reduce((acc, s, i) => (s.endTime ? i : acc), -1)
+      if (lastDoneIdx >= 0) {
+        stages[lastDoneIdx] = { ...stages[lastDoneIdx], endTime: null, notes: '' }
+      }
+      const updated = { ...prev, stages }
+      setActiveBake(updated)
+      return updated
+    })
+  }, [])
+
+  // Edit the recorded duration of a completed stage (adjusts endTime)
+  const editStageDuration = useCallback((stageId, durationMinutes) => {
+    setActiveBakeState(prev => {
+      const stages = prev.stages.map(s => {
+        if (s.stageId === stageId && s.endTime) {
+          const newEndTime = new Date(
+            new Date(s.startTime).getTime() + durationMinutes * 60000
+          ).toISOString()
+          return { ...s, endTime: newEndTime }
+        }
+        return s
+      })
+      const updated = { ...prev, stages }
+      setActiveBake(updated)
+      return updated
+    })
+  }, [])
+
   // Abandon active bake without saving
   const abandonBake = useCallback(() => {
     setActiveBake(null)
@@ -121,5 +158,7 @@ export function useBakeSession() {
     logTemp,
     completeBake,
     abandonBake,
+    goBackStage,
+    editStageDuration,
   }
 }

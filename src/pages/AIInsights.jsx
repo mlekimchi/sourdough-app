@@ -122,21 +122,34 @@ export default function AIInsights() {
         )}
 
         {result && (
-          <div className="bg-white rounded-2xl border border-dough-200 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-dough-700">
-                <Sparkles size={18} />
-                <span className="font-semibold">Claude's Analysis</span>
+          <div className="space-y-3">
+            {/* Most recent crumb shot, if any */}
+            {(() => {
+              const latestPhoto = bakes.find(b => b.survey?.crumbPhoto)?.survey?.crumbPhoto
+              return latestPhoto ? (
+                <div className="bg-white rounded-2xl border border-dough-100 p-4">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Latest crumb shot</p>
+                  <img src={latestPhoto} alt="Crumb shot" className="rounded-xl w-full object-cover max-h-52" />
+                </div>
+              ) : null
+            })()}
+
+            <div className="bg-white rounded-2xl border border-dough-200 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-dough-700">
+                  <Sparkles size={18} />
+                  <span className="font-semibold">Claude's Analysis</span>
+                </div>
+                <button
+                  onClick={handleAnalyze}
+                  disabled={loading}
+                  className="text-gray-400 hover:text-dough-600"
+                >
+                  <RefreshCw size={16} />
+                </button>
               </div>
-              <button
-                onClick={handleAnalyze}
-                disabled={loading}
-                className="text-gray-400 hover:text-dough-600"
-              >
-                <RefreshCw size={16} />
-              </button>
+              <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{result}</p>
             </div>
-            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{result}</p>
           </div>
         )}
       </div>

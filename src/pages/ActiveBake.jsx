@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ThermometerSun, ChevronRight, CheckCircle2, Info, Flame } from 'lucide-react'
+import { ChevronLeft, ThermometerSun, ChevronRight, CheckCircle2, Info, Flame, Undo2, Pencil } from 'lucide-react'
 import { STAGES } from '../data/stages'
 
 // ── Audio ─────────────────────────────────────────────────────────────────────
@@ -324,7 +324,7 @@ function IngredientsForm({ onSave }) {
 
 export default function ActiveBake({ activeBake, bakeActions }) {
   const navigate = useNavigate()
-  const { startStage, endStage, updateRecipe, logTemp, abandonBake } = bakeActions
+  const { startStage, endStage, updateRecipe, logTemp, abandonBake, goBackStage, editStageDuration } = bakeActions
 
   const [tick, setTick] = useState(0)
   useEffect(() => {
@@ -350,12 +350,13 @@ export default function ActiveBake({ activeBake, bakeActions }) {
   // Shared stage state
   const [stageNotes,      setStageNotes]      = useState('')
   const [coldRetard,      setColdRetard]      = useState(false)
-  const [mixInName,       setMixInName]       = useState('')
-  const [mixInGrams,      setMixInGrams]      = useState('')
+  const [inclusionName,   setInclusionName]   = useState('')
+  const [inclusionGrams,  setInclusionGrams]  = useState('')
   // Modals
   const [showTempModal,   setShowTempModal]   = useState(false)
   const [showTips,        setShowTips]        = useState(null)
   const [showAbandon,     setShowAbandon]     = useState(false)
+  const [editingStage,    setEditingStage]    = useState(null) // { stageId, label, durationMin }
   // Temp inputs
   const [tempAmbient,     setTempAmbient]     = useState('')
   const [tempDough,       setTempDough]       = useState('')
@@ -386,8 +387,8 @@ export default function ActiveBake({ activeBake, bakeActions }) {
     startStage(stageId)
     setStageNotes('')
     setColdRetard(false)
-    setMixInName('')
-    setMixInGrams('')
+    setInclusionName('')
+    setInclusionGrams('')
   }
 
   const handleEndStage = () => {
@@ -398,20 +399,42 @@ export default function ActiveBake({ activeBake, bakeActions }) {
       const u = Number(levainUnfed), f = Number(levainFlour) || u, w = Number(levainWater) || u
       extras.levainData = { unfed: u, flour: f, water: w, total: u + f + w }
     }
-    if (stageId === 'sf_2' && mixInName) {
-      extras.mixIn = { name: mixInName, grams: Number(mixInGrams) || null }
+    if (stageId === 'sf_2' && inclusionName) {
+      extras.inclusion = { name: inclusionName, grams: Number(inclusionGrams) || null }
     }
     if (stageId === 'final_proof') {
       extras.isCold = coldRetard
     }
     endStage(stageId, stageNotes, extras)
     setStageNotes('')
-    setMixInName('')
-    setMixInGrams('')
+    setInclusionName('')
+    setInclusionGrams('')
     setColdRetard(false)
     // Auto-advance to next stage
     const nextId = AUTO_ADVANCE[stageId]
     if (nextId) startStage(nextId)
+  }
+
+  const handleGoBack = () => {
+    // Clear beep state for the stage we're going back to (so it can re-beep if needed)
+    const lastDone = stages.filter(s => s.endTime).at(-1)
+    if (lastDone) beepedRef.current.delete(lastDone.stageId)
+    goBackStage()
+    setStageNotes('')
+    setInclusionName('')
+    setInclusionGrams('')
+    setColdRetard(false)
+  }
+
+  const openEditStage = (s, cfg) => {
+    const dur = stageDurationMin(s)
+    setEditingStage({ stageId: s.stageId, label: cfg?.label || s.stageId, durationMin: dur ?? 0 })
+  }
+
+  const handleSaveEditStage = () => {
+    if (!editingStage) return
+    editStageDuration(editingStage.stageId, editingStage.durationMin)
+    setEditingStage(null)
   }
 
   const handleIngredientsSubmit = (recipe) => {
@@ -517,16 +540,16 @@ export default function ActiveBake({ activeBake, bakeActions }) {
               />
             )}
 
-            {/* Mix-in at S&F 2 */}
+            {/* Inclusions at S&F 2 */}
             {activeStage.stageId === 'sf_2' && (
               <div className="mt-2 bg-amber-100 rounded-xl p-3 space-y-2">
-                <p className="text-amber-800 text-xs font-semibold uppercase tracking-wide">Mix-In (optional)</p>
+                <p className="text-amber-800 text-xs font-semibold uppercase tracking-wide">Inclusions (optional)</p>
                 <div className="flex gap-2">
-                  <input className="input flex-1 text-sm bg-white" value={mixInName}
-                    onChange={e => setMixInName(e.target.value)} placeholder="e.g. Olives, seeds, cheese" />
+                  <input className="input flex-1 text-sm bg-white" value={inclusionName}
+                    onChange={e => setInclusionName(e.target.value)} placeholder="e.g. Olives, seeds, cheese" />
                   <div className="relative w-24 shrink-0">
                     <input className="input pr-6 text-sm bg-white" type="number" inputMode="decimal"
-                      value={mixInGrams} onChange={e => setMixInGrams(e.target.value)} placeholder="50" />
+                      value={inclusionGrams} onChange={e => setInclusionGrams(e.target.value)} placeholder="50" />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">g</span>
                   </div>
                 </div>
@@ -555,6 +578,13 @@ export default function ActiveBake({ activeBake, bakeActions }) {
               <CheckCircle2 size={20} />
               {endBtnLabel}
             </button>
+
+            {completedIds.length > 0 && (
+              <button onClick={handleGoBack}
+                className="mt-2 w-full flex items-center justify-center gap-1.5 text-gray-400 hover:text-gray-600 text-sm py-2">
+                <Undo2 size={14} /> Undo — go back to previous stage
+              </button>
+            )}
           </div>
         )}
 
@@ -592,23 +622,33 @@ export default function ActiveBake({ activeBake, bakeActions }) {
               {stages.filter(s => s.endTime).map(s => {
                 const cfg = STAGES.find(c => c.id === s.stageId)
                 const dur = stageDurationMin(s)
+                const inc = s.inclusion || s.mixIn
+                const editable = !cfg?.isForm && !cfg?.noTimer && dur != null
                 return (
                   <div key={s.stageId} className="text-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-gray-700 flex-wrap">
-                        <CheckCircle2 size={15} className="text-green-500 shrink-0" />
-                        <span>{cfg?.label || s.stageId}</span>
-                        {s.isCold && <span className="text-xs text-blue-500">(cold)</span>}
-                        {s.mixIn?.name && (
-                          <span className="text-xs text-dough-500 bg-dough-50 px-1.5 py-0.5 rounded-full">
-                            + {s.mixIn.name}{s.mixIn.grams ? ` ${s.mixIn.grams}g` : ''}
+                    <button
+                      className="w-full text-left"
+                      onClick={() => editable && openEditStage(s, cfg)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-gray-700 flex-wrap">
+                          <CheckCircle2 size={15} className="text-green-500 shrink-0" />
+                          <span>{cfg?.label || s.stageId}</span>
+                          {s.isCold && <span className="text-xs text-blue-500">(cold)</span>}
+                          {inc?.name && (
+                            <span className="text-xs text-dough-500 bg-dough-50 px-1.5 py-0.5 rounded-full">
+                              + {inc.name}{inc.grams ? ` ${inc.grams}g` : ''}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                          <span className="text-gray-400 text-xs">
+                            {cfg?.isForm ? '✓' : dur != null ? `${dur} min` : ''}
                           </span>
-                        )}
+                          {editable && <Pencil size={11} className="text-gray-300" />}
+                        </div>
                       </div>
-                      <span className="text-gray-400 text-xs shrink-0 ml-2">
-                        {cfg?.isForm ? '✓' : dur != null ? `${dur} min` : ''}
-                      </span>
-                    </div>
+                    </button>
                     {/* Levain data summary */}
                     {s.levainData && (
                       <div className="ml-5 mt-0.5 text-xs text-gray-400">
@@ -697,6 +737,28 @@ export default function ActiveBake({ activeBake, bakeActions }) {
               ))}
             </ul>
             <button onClick={() => setShowTips(null)} className="mt-4 w-full bg-gray-100 rounded-xl py-3 font-medium">Got it</button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit stage duration modal */}
+      {editingStage && (
+        <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => setEditingStage(null)}>
+          <div className="bg-white rounded-t-3xl p-6 w-full max-w-md mx-auto" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-lg mb-1">Edit Duration</h3>
+            <p className="text-gray-400 text-sm mb-4">{editingStage.label}</p>
+            <label className="label">Duration (minutes)</label>
+            <input
+              className="input mb-4"
+              type="number"
+              inputMode="decimal"
+              value={editingStage.durationMin}
+              onChange={e => setEditingStage(prev => ({ ...prev, durationMin: Number(e.target.value) }))}
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setEditingStage(null)} className="flex-1 bg-gray-100 rounded-xl py-3 font-medium">Cancel</button>
+              <button onClick={handleSaveEditStage} className="flex-1 bg-dough-600 text-white rounded-xl py-3 font-bold">Save</button>
+            </div>
           </div>
         </div>
       )}

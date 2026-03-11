@@ -24,6 +24,8 @@ export default function App() {
     logTemp: bakeSession.logTemp,
     completeBake: bakeSession.completeBake,
     abandonBake: bakeSession.abandonBake,
+    goBackStage: bakeSession.goBackStage,
+    editStageDuration: bakeSession.editStageDuration,
   }
 
   return (

@@ -57,15 +57,15 @@ export const STAGES = [
   {
     id: 'sf_2',
     label: 'Stretch & Fold 2',
-    description: 'Second set of stretch & folds. Good time to add mix-ins. Then rest 30 minutes.',
+    description: 'Second set of stretch & folds. Good time to add inclusions. Then rest 30 minutes.',
     countDown: 30,
     typicalMin: 30,
     typicalMax: 30,
-    hasMixIn: true,
+    hasInclusion: true,
     tips: [
       'Dough should feel noticeably smoother and more elastic now',
-      'To add mix-ins: flatten slightly, scatter evenly, fold over, then do your S&F',
-      'Great mix-ins: olives, seeds, dried fruit, cheese, roasted garlic, herbs',
+      'To add inclusions: flatten slightly, scatter evenly, fold over, then do your S&F',
+      'Great inclusions: olives, seeds, dried fruit, cheese, roasted garlic, herbs',
     ],
   },
   {

@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star } from 'lucide-react'
+import { Star, Camera, X } from 'lucide-react'
 
 const CRITERIA = [
-  { key: 'rise',   label: 'Oven Spring / Rise',   description: 'How much did it rise in the oven?' },
-  { key: 'crumb',  label: 'Crumb Structure',        description: 'Open & airy vs dense & tight' },
-  { key: 'crust',  label: 'Crust',                  description: 'Color, crackle, and thickness' },
-  { key: 'flavor', label: 'Flavor',                 description: 'Tang, complexity, overall taste' },
-  { key: 'overall',label: 'Overall',                description: 'Your overall satisfaction' },
+  { key: 'rise',            label: 'Oven Spring / Rise',    description: 'How much did it rise in the oven?' },
+  { key: 'crumb',           label: 'Crumb Structure',        description: 'Open & airy vs dense & tight' },
+  { key: 'crust',           label: 'Crust',                  description: 'Color, crackle, and thickness' },
+  { key: 'flavor',          label: 'Flavor',                 description: 'Tang, complexity, overall taste' },
+  { key: 'dough_integrity', label: 'Dough Integrity',        description: 'During shaping & scoring — did it hold its shape or was it flabby?' },
+  { key: 'overall',         label: 'Overall',                description: 'Your overall satisfaction' },
 ]
 
 function StarRating({ value, onChange }) {
@@ -25,17 +26,45 @@ function StarRating({ value, onChange }) {
   )
 }
 
+function compressImage(file, maxWidth = 800) {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width)
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width * scale
+        canvas.height = img.height * scale
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL('image/jpeg', 0.72))
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function Survey({ onCompleteBake }) {
   const navigate = useNavigate()
-  const [ratings, setRatings] = useState({ rise: 0, crumb: 0, crust: 0, flavor: 0, overall: 0 })
+  const fileInputRef = useRef(null)
+  const [ratings, setRatings] = useState({ rise: 0, crumb: 0, crust: 0, flavor: 0, dough_integrity: 0, overall: 0 })
   const [notes, setNotes] = useState('')
+  const [crumbPhoto, setCrumbPhoto] = useState(null)
 
   const set = (key, val) => setRatings(r => ({ ...r, [key]: val }))
   const allRated = Object.values(ratings).every(v => v > 0)
 
+  const handlePhoto = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const compressed = await compressImage(file)
+    setCrumbPhoto(compressed)
+  }
+
   const handleSubmit = () => {
     if (!allRated) return
-    onCompleteBake({ ...ratings, notes })
+    onCompleteBake({ ...ratings, notes, crumbPhoto })
     navigate('/')
   }
 
@@ -48,15 +77,54 @@ export default function Survey({ onCompleteBake }) {
       </div>
 
       <div className="px-4 py-6 space-y-6">
-        {CRITERIA.map(c => (
-          <div key={c.key} className="bg-white rounded-2xl border border-dough-100 p-4">
-            <div className="mb-1">
-              <span className="font-semibold text-gray-800">{c.label}</span>
-              <p className="text-gray-500 text-xs mt-0.5">{c.description}</p>
+        {CRITERIA.map((c, i) => (
+          <div key={c.key}>
+            <div className="bg-white rounded-2xl border border-dough-100 p-4">
+              <div className="mb-1">
+                <span className="font-semibold text-gray-800">{c.label}</span>
+                <p className="text-gray-500 text-xs mt-0.5">{c.description}</p>
+              </div>
+              <div className="mt-3">
+                <StarRating value={ratings[c.key]} onChange={v => set(c.key, v)} />
+              </div>
             </div>
-            <div className="mt-3">
-              <StarRating value={ratings[c.key]} onChange={v => set(c.key, v)} />
-            </div>
+
+            {/* Crumb shot upload — shown after Crumb Structure */}
+            {c.key === 'crumb' && (
+              <div className="bg-white rounded-2xl border border-dough-100 p-4 mt-4">
+                <span className="font-semibold text-gray-800">Crumb Shot</span>
+                <p className="text-gray-500 text-xs mt-0.5">Optional — helps Claude assess over/underproofing</p>
+
+                {crumbPhoto ? (
+                  <div className="mt-3 relative">
+                    <img src={crumbPhoto} alt="Crumb shot" className="rounded-xl w-full object-cover max-h-48" />
+                    <button
+                      onClick={() => { setCrumbPhoto(null); fileInputRef.current.value = '' }}
+                      className="absolute top-2 right-2 bg-black/50 rounded-full p-1"
+                    >
+                      <X size={16} className="text-white" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => fileInputRef.current.click()}
+                    className="mt-3 flex items-center gap-2 border-2 border-dashed border-dough-200 rounded-xl w-full py-4 justify-center text-dough-500 hover:border-dough-400 hover:text-dough-600 transition-colors"
+                  >
+                    <Camera size={20} />
+                    <span className="text-sm font-medium">Add crumb shot</span>
+                  </button>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handlePhoto}
+                />
+              </div>
+            )}
           </div>
         ))}
 

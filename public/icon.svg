@@ -1,19 +1,62 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Rounded square background in dough-600 -->
-  <rect width="512" height="512" rx="110" fill="#b45309"/>
+  <!-- Background: warm cream -->
+  <rect width="512" height="512" rx="110" fill="#faf3e8"/>
 
-  <!-- Loaf body (bottom flat rectangle) -->
-  <rect x="96" y="300" width="320" height="120" rx="24" fill="#fde68a"/>
+  <!-- Soft glow/shadow under blob -->
+  <ellipse cx="256" cy="400" rx="130" ry="18" fill="#e8c97a" opacity="0.25"/>
 
-  <!-- Loaf dome (top rounded) -->
-  <path d="M96 308 Q96 152 256 152 Q416 152 416 308 Z" fill="#fde68a"/>
+  <!-- Main blob body: dome top, 4 drip feet at bottom -->
+  <path d="
+    M 256 138
+    C 308 138, 364 168, 378 228
+    C 390 278, 374 308, 380 335
+    C 385 355, 400 365, 394 385
+    C 388 402, 366 402, 354 383
+    C 342 364, 342 348, 320 354
+    C 305 358, 296 376, 276 380
+    C 264 383, 252 370, 238 380
+    C 220 392, 210 408, 192 402
+    C 174 396, 170 376, 182 357
+    C 192 340, 204 324, 198 300
+    C 192 274, 168 258, 156 222
+    C 142 178, 178 138, 256 138
+    Z
+  " fill="#f5e8cc" stroke="#c49a45" stroke-width="6.5" stroke-linejoin="round"/>
 
-  <!-- Crust shading on dome -->
-  <path d="M128 290 Q128 184 256 184 Q384 184 384 290" fill="none" stroke="#d97706" stroke-width="10" stroke-linecap="round" opacity="0.5"/>
+  <!-- Inner sheen on dome (top-left highlight) -->
+  <ellipse cx="224" cy="196" rx="38" ry="28" fill="white" opacity="0.22" transform="rotate(-20 224 196)"/>
 
-  <!-- Score line -->
-  <path d="M175 240 Q256 208 337 240" fill="none" stroke="#b45309" stroke-width="11" stroke-linecap="round"/>
+  <!-- Eyes -->
+  <circle cx="227" cy="238" r="14" fill="#3b1f0c"/>
+  <circle cx="285" cy="238" r="14" fill="#3b1f0c"/>
+  <!-- Eye shine -->
+  <circle cx="232" cy="233" r="4.5" fill="white" opacity="0.7"/>
+  <circle cx="290" cy="233" r="4.5" fill="white" opacity="0.7"/>
 
-  <!-- Bottom crust line -->
-  <rect x="96" y="298" width="320" height="14" rx="7" fill="#d97706" opacity="0.4"/>
+  <!-- Small texture dots on body -->
+  <circle cx="256" cy="302" r="4" fill="#c49a45" opacity="0.25"/>
+  <circle cx="238" cy="318" r="3" fill="#c49a45" opacity="0.2"/>
+  <circle cx="274" cy="315" r="3" fill="#c49a45" opacity="0.2"/>
+  <circle cx="300" cy="285" r="3.5" fill="#c49a45" opacity="0.18"/>
+  <circle cx="215" cy="285" r="3" fill="#c49a45" opacity="0.18"/>
+
+  <!-- Bubble: upper right large -->
+  <circle cx="368" cy="162" r="26" fill="#f5e8cc" stroke="#c49a45" stroke-width="5.5"/>
+  <circle cx="360" cy="154" r="7" fill="white" opacity="0.55"/>
+
+  <!-- Bubble: upper right small -->
+  <circle cx="405" cy="118" r="17" fill="#f5e8cc" stroke="#c49a45" stroke-width="4.5"/>
+  <circle cx="399" cy="112" r="4.5" fill="white" opacity="0.55"/>
+
+  <!-- Bubble: far right tiny -->
+  <circle cx="418" cy="192" r="10" fill="#f5e8cc" stroke="#c49a45" stroke-width="3.5"/>
+  <circle cx="414" cy="188" r="3" fill="white" opacity="0.5"/>
+
+  <!-- Bubble: bottom right small -->
+  <circle cx="398" cy="352" r="13" fill="#f5e8cc" stroke="#c49a45" stroke-width="4"/>
+  <circle cx="393" cy="347" r="3.5" fill="white" opacity="0.5"/>
+
+  <!-- Bubble: bottom center-right tiny -->
+  <circle cx="348" cy="410" r="9" fill="#f5e8cc" stroke="#c49a45" stroke-width="3"/>
+  <circle cx="344" cy="406" r="2.5" fill="white" opacity="0.5"/>
 </svg>

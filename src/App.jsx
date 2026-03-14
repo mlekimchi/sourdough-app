@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useBakeSession } from './hooks/useBakeSession'
 import { getActiveBake } from './services/storage'
@@ -11,6 +12,12 @@ import AIInsights from './pages/AIInsights'
 import Settings from './pages/Settings'
 
 export default function App() {
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [])
+
   const bakeSession = useBakeSession()
   const { activeBake, startBake, completeBake } = bakeSession
   // Fall back to localStorage so the /bake route guard works even if React

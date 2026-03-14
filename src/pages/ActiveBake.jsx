@@ -8,16 +8,19 @@ import { STAGES } from '../data/stages'
 function playBeep() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const osc  = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.value = 880
-    osc.type = 'sine'
-    gain.gain.setValueAtTime(0.4, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.8)
+    // Play 3 short beeps spaced 0.35s apart
+    ;[0, 0.35, 0.7].forEach(offset => {
+      const osc  = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = 880
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0.5, ctx.currentTime + offset)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.25)
+      osc.start(ctx.currentTime + offset)
+      osc.stop(ctx.currentTime + offset + 0.25)
+    })
   } catch (_) {}
 }
 
@@ -372,16 +375,37 @@ export default function ActiveBake({ activeBake, bakeActions }) {
     return () => clearInterval(id)
   }, [])
 
-  // Beep once when a countdown stage hits zero
-  const beepedRef = useRef(new Set())
+  // Beep repeatedly when a countdown stage hits zero, until Done is pressed
+  const beepedRef     = useRef(new Set())
+  const beepIntervalRef = useRef(null)
+
+  const stopRepeatingBeep = () => {
+    if (beepIntervalRef.current) {
+      clearInterval(beepIntervalRef.current)
+      beepIntervalRef.current = null
+    }
+  }
+
   useEffect(() => {
     if (!activeStage || !activeStageConfig?.countDown) return
     const remaining = activeStageConfig.countDown * 60 - elapsedSecs(activeStage.startTime)
     if (remaining <= 0 && !beepedRef.current.has(activeStage.stageId)) {
       beepedRef.current.add(activeStage.stageId)
       playBeep()
+      // Repeat every 4 seconds until Done is pressed
+      beepIntervalRef.current = setInterval(playBeep, 4000)
+      // Show a system notification (works when app is backgrounded but screen is on)
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Timer complete! 🍞', {
+          body: `${activeStageConfig.label} is done — tap to return to your bake.`,
+          icon: '/icon.png',
+        })
+      }
     }
   }, [tick]) // eslint-disable-line
+
+  // Clean up repeating beep on unmount
+  useEffect(() => stopRepeatingBeep, [])
 
   // Levain inputs
   const [levainUnfed,     setLevainUnfed]     = useState('')
@@ -454,6 +478,7 @@ export default function ActiveBake({ activeBake, bakeActions }) {
     if (stageId === 'final_proof') {
       extras.isCold = coldRetard
     }
+    stopRepeatingBeep()
     endStage(stageId, stageNotes, extras)
     setStageNotes('')
     setInclusionName('')
@@ -465,6 +490,7 @@ export default function ActiveBake({ activeBake, bakeActions }) {
   }
 
   const handleGoBack = () => {
+    stopRepeatingBeep()
     // Clear beep state for the stage we're going back to (so it can re-beep if needed)
     const lastDone = stages.filter(s => s.endTime).at(-1)
     if (lastDone) beepedRef.current.delete(lastDone.stageId)
